@@ -1,2 +1,4 @@
+pytest
+moto
 boto3
-slack-sdk
+slack_sdk
