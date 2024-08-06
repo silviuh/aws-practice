@@ -15,28 +15,35 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
+      - name: Set PYTHONPATH
+        run: echo "PYTHONPATH=$(pwd)/src" >> $GITHUB_ENV
+
       - name: Run unit tests
-        run: |
-          pytest tests/unit
+        run: pytest tests/unit
+
       - name: Run integration tests
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: us-west-2
-        run: |
-          pytest tests/integration
+        run: pytest tests/integration
+
       - name: Run tests with coverage
         run: |
           pip install pytest-cov
           pytest --cov=src --cov-report=xml tests/unit tests/integration
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
