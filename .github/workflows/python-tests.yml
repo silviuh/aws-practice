@@ -30,19 +30,19 @@ jobs:
         run: echo "PYTHONPATH=$(pwd)/src" >> $GITHUB_ENV
 
       - name: Run unit tests
-        run: pytest tests/unit
+        run: pytest src/tests/unit
 
       - name: Run integration tests
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: us-west-2
-        run: pytest tests/integration
+        run: pytest src/tests/integration
 
       - name: Run tests with coverage
         run: |
           pip install pytest-cov
-          pytest --cov=src --cov-report=xml tests/unit tests/integration
+          pytest --cov=src --cov-report=xml src/tests/unit src/tests/integration
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
