@@ -1,7 +1,6 @@
 service: environment-booking-app
 
-plugins:
-  - serverless-python-requirements
+frameworkVersion: '3'
 
 provider:
   name: aws
@@ -14,12 +13,13 @@ provider:
   iamRoleStatements:
     - Effect: Allow
       Action:
-        - dynamodb:GetItem
         - dynamodb:PutItem
         - dynamodb:UpdateItem
-        - dynamodb:DeleteItem
+        - dynamodb:GetItem
         - dynamodb:Scan
-      Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/EnvironmentBookings"
+      Resource:
+        - arn:aws:dynamodb:us-west-2:337508380087:table/EnvironmentBookings
+        - arn:aws:ssm:us-west-2:337508380087:parameter/slack/bot-token  # Ad
 
 functions:
   slackCommand:
@@ -29,6 +29,10 @@ functions:
           path: slack-command
           method: post
           integration: lambda-proxy
+
+  initializeEnvironments:
+    handler: src/initialize_environments_lambda.lambda_handler
+    description: "Initialize environments in the DynamoDB table"
 
 resources:
   Resources:
@@ -43,20 +47,16 @@ resources:
           - AttributeName: EnvironmentId
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
-    ApiGatewayRestApi:
+
+    SlackCommandAPI:
       Type: AWS::ApiGateway::RestApi
       Properties:
         Name: ${self:service}-${self:provider.stage}
         Body: ${file(slack-command-api.yaml)}
 
-  Outputs:
-    ApiGatewayRestApiId:
-      Value:
-        Ref: ApiGatewayRestApi
-    SlackCommandLambdaFunctionArn:
-      Value:
-        Fn::GetAtt: [slackCommand, Arn]
+plugins:
+  - serverless-python-requirements
 
 custom:
   pythonRequirements:
-    dockerizePip: non-linux
+    dockerizePip: true
