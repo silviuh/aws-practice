@@ -1,6 +1,6 @@
 import pytest
 import boto3
-from moto import mock_dynamodb
+from moto import mock_dynamodb2
 import os
 from src.lambda_function import lambda_handler
 from src.dynamo_operations import initialize_environments
@@ -15,7 +15,7 @@ def aws_credentials():
 
 @pytest.fixture(scope='function')
 def dynamodb(aws_credentials):
-    with mock_dynamodb():
+    with mock_dynamodb2():
         yield boto3.resource('dynamodb', region_name='us-west-2')
 
 @pytest.fixture(scope='function')
