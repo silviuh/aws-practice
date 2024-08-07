@@ -7,6 +7,7 @@ client = WebClient(token=slack_token)
 
 
 def send_message(channel, message):
+    print(slack_token)
     # try:
     #     response = client.chat_postMessage(
     #         channel=channel,

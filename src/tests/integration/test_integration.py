@@ -1,13 +1,13 @@
 import pytest
 import boto3
-from moto import mock_dynamodb2
+from moto import mock_aws
 import os
 from src.lambda_function import lambda_handler
 from src.dynamo_operations import initialize_environments
+from unittest.mock import patch
 
 @pytest.fixture(scope='function')
 def aws_credentials():
-    """Mocked AWS Credentials for moto."""
     os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
     os.environ['AWS_SECRET_ACCESS_KEY'] = 'testing'
     os.environ['AWS_SECURITY_TOKEN'] = 'testing'
@@ -15,7 +15,7 @@ def aws_credentials():
 
 @pytest.fixture(scope='function')
 def dynamodb(aws_credentials):
-    with mock_dynamodb2():
+    with mock_aws():
         yield boto3.resource('dynamodb', region_name='us-west-2')
 
 @pytest.fixture(scope='function')
@@ -31,50 +31,44 @@ def dynamodb_table(dynamodb):
 
 @pytest.fixture
 def mock_send_message():
-    with patch('src.slack_integration.send_message') as mock:
+    with patch('src.lambda_function.send_message') as mock:
         yield mock
 
 def test_integration_book_and_return(dynamodb_table, mock_send_message):
-    # Book an environment
     book_event = {
         'body': 'command=/book&text=dev-1 for Testing&user_name=user1&channel_id=C12345'
     }
     result = lambda_handler(book_event, None)
     assert result['statusCode'] == 200
     assert "booked successfully" in result['body']
-    mock_send_message.assert_called_once()
+    mock_send_message.assert_called_once_with('C12345', "Environment dev-1 booked successfully for Testing.")
     mock_send_message.reset_mock()
 
-    # Verify the booking in DynamoDB
     item = dynamodb_table.get_item(Key={'EnvironmentId': 'dev-1'})['Item']
     assert item['Status'] == 'Booked'
     assert item['BookedBy'] == 'user1'
     assert item['Reason'] == 'Testing'
 
-    # Return the environment
     return_event = {
         'body': 'command=/return&text=dev-1&user_name=user1&channel_id=C12345'
     }
     result = lambda_handler(return_event, None)
     assert result['statusCode'] == 200
     assert "returned successfully" in result['body']
-    mock_send_message.assert_called_once()
+    mock_send_message.assert_called_once_with('C12345', "Environment dev-1 returned successfully.")
 
-    # Verify the return in DynamoDB
     item = dynamodb_table.get_item(Key={'EnvironmentId': 'dev-1'})['Item']
     assert item['Status'] == 'Available'
     assert item['BookedBy'] == ''
     assert item['Reason'] == ''
 
 def test_integration_status(dynamodb_table, mock_send_message):
-    # Book an environment first
     book_event = {
         'body': 'command=/book&text=dev-1 for Testing&user_name=user1&channel_id=C12345'
     }
     lambda_handler(book_event, None)
     mock_send_message.reset_mock()
 
-    # Check status
     status_event = {
         'body': 'command=/stat&user_name=user1&channel_id=C12345'
     }
@@ -86,14 +80,12 @@ def test_integration_status(dynamodb_table, mock_send_message):
     mock_send_message.assert_called_once()
 
 def test_integration_evict(dynamodb_table, mock_send_message):
-    # Book an environment first
     book_event = {
         'body': 'command=/book&text=dev-1 for Testing&user_name=user1&channel_id=C12345'
     }
     lambda_handler(book_event, None)
     mock_send_message.reset_mock()
 
-    # Evict the environment
     evict_event = {
         'body': 'command=/evict&text=dev-1&user_name=user2&channel_id=C12345'
     }
@@ -102,7 +94,6 @@ def test_integration_evict(dynamodb_table, mock_send_message):
     assert "has been evicted" in result['body']
     mock_send_message.assert_called_once()
 
-    # Verify the eviction in DynamoDB
     item = dynamodb_table.get_item(Key={'EnvironmentId': 'dev-1'})['Item']
     assert item['Status'] == 'Available'
     assert item['BookedBy'] == ''
