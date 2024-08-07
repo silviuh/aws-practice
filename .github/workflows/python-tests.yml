@@ -49,9 +49,3 @@ jobs:
           pip install pytest-cov
           pytest --cov=src --cov-report=xml src/tests/unit src/tests/integration
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
-        with:
-          file: ./coverage.xml
-          flags: unittests
-          fail_ci_if_error: true
