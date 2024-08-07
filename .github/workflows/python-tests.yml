@@ -29,8 +29,6 @@ jobs:
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=$(pwd)/src" >> $GITHUB_ENV
 
-      - name: Set SLACK_BOT_TOKEN
-
       - name: Run unit tests
         run: pytest src/tests/unit
 
