@@ -3,6 +3,7 @@ from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 import time
 
+boto3.setup_default_session(region_name='us-west-2')
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('EnvironmentBookings')
 
