@@ -27,9 +27,11 @@ jobs:
           pip install -r requirements.txt
 
       - name: Set PYTHONPATH
-        run: echo "PYTHONPATH=$(pwd)/src" >> $GITHUB_ENV
+        run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
 
       - name: Run unit tests
+        env:
+          SLACK_BOT_TOKEN: dummy_token_value
         run: pytest src/tests/unit
 
       - name: Run integration tests
@@ -37,6 +39,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: us-west-2
+          SLACK_BOT_TOKEN: dummy_token_value
         run: pytest src/tests/integration
 
       - name: Run tests with coverage
