@@ -35,11 +35,13 @@ jobs:
           echo "AWS_SECRET_ACCESS_KEY=testing" >> $GITHUB_ENV
           echo "AWS_SECURITY_TOKEN=testing" >> $GITHUB_ENV
           echo "AWS_SESSION_TOKEN=testing" >> $GITHUB_ENV
-          echo "AWS_DEFAULT_REGION=testing" >> $GITHUB_ENV
+          echo "AWS_DEFAULT_REGION=us-west-2" >> $GITHUB_ENV
           echo "SLACK_BOT_TOKEN=dummy_token_value" >> $GITHUB_ENV
 
       - name: Run unit tests
-        run: pytest src/tests/unit
+        run: |
+          pwd
+          pytest src/tests/unit
 
       - name: Run integration tests
         run: pytest src/tests/integration
@@ -49,3 +51,9 @@ jobs:
           pip install pytest-cov
           pytest --cov=src --cov-report=xml src/tests/unit src/tests/integration
 
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          fail_ci_if_error: true
