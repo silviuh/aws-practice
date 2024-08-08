@@ -27,7 +27,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Set PYTHONPATH
-        run: echo "PYTHONPATH=$(pwd)/src" >> $GITHUB_ENV
+        run: echo "PYTHONPATH=${{ github.workspace }}" >> $GITHUB_ENV
 
       - name: Set AWS and Slack environment variables
         run: |
@@ -35,7 +35,7 @@ jobs:
           echo "AWS_SECRET_ACCESS_KEY=testing" >> $GITHUB_ENV
           echo "AWS_SECURITY_TOKEN=testing" >> $GITHUB_ENV
           echo "AWS_SESSION_TOKEN=testing" >> $GITHUB_ENV
-          echo "AWS_DEFAULT_REGION=us-west-2" >> $GITHUB_ENV
+          echo "AWS_DEFAULT_REGION=testing" >> $GITHUB_ENV
           echo "SLACK_BOT_TOKEN=dummy_token_value" >> $GITHUB_ENV
 
       - name: Run unit tests
@@ -50,8 +50,9 @@ jobs:
           pytest --cov=src --cov-report=xml tests/unit tests/integration
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           file: ./coverage.xml
           flags: unittests
+          name: codecov-umbrella
           fail_ci_if_error: true
