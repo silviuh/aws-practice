@@ -27,7 +27,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Set PYTHONPATH
-        run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
+        run: echo "PYTHONPATH=$(pwd)/src" >> $GITHUB_ENV
 
       - name: Set AWS and Slack environment variables
         run: |
@@ -39,9 +39,7 @@ jobs:
           echo "SLACK_BOT_TOKEN=dummy_token_value" >> $GITHUB_ENV
 
       - name: Run unit tests
-        run: |
-          pwd
-          pytest tests/unit
+        run: pytest tests/unit
 
       - name: Run integration tests
         run: pytest tests/integration
@@ -49,7 +47,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           pip install pytest-cov
-          pytest --cov=src --cov-report=xml src/tests/unit src/tests/integration
+          pytest --cov=src --cov-report=xml tests/unit tests/integration
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
