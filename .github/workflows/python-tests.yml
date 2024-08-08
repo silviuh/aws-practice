@@ -41,10 +41,10 @@ jobs:
       - name: Run unit tests
         run: |
           pwd
-          pytest src/tests/unit
+          pytest tests/unit
 
       - name: Run integration tests
-        run: pytest src/tests/integration
+        run: pytest tests/integration
 
       - name: Run tests with coverage
         run: |
