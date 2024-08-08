@@ -35,7 +35,7 @@ jobs:
           echo "AWS_SECRET_ACCESS_KEY=testing" >> $GITHUB_ENV
           echo "AWS_SECURITY_TOKEN=testing" >> $GITHUB_ENV
           echo "AWS_SESSION_TOKEN=testing" >> $GITHUB_ENV
-          echo "AWS_DEFAULT_REGION=us-west-2" >> $GITHUB_ENV
+          echo "AWS_DEFAULT_REGION=us--2" >> $GITHUB_ENV
           echo "SLACK_BOT_TOKEN=dummy_token_value" >> $GITHUB_ENV
 
       - name: Run unit tests
