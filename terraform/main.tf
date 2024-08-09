@@ -65,25 +65,19 @@ resource "aws_iam_role_policy" "lambda_policy" {
   })
 }
 
-data "archive_file" "slack_command_lambda" {
+data "archive_file" "lambda_package" {
   type        = "zip"
   source_dir  = "${path.module}/../src"
-  output_path = "${path.module}/../tmp/lambda_function.zip"
-}
-
-data "archive_file" "initialize_environments_lambda" {
-  type        = "zip"
-  source_dir  = "${path.module}/../src"
-  output_path = "${path.module}/../tmp/initialize_environments_lambda.zip"
+  output_path = "${path.module}/../tmp/lambda_package.zip"
 }
 
 resource "aws_lambda_function" "slack_command" {
-  filename         = data.archive_file.slack_command_lambda.output_path
+  filename         = data.archive_file.lambda_package.output_path
   function_name    = "slack-command-lambda"
   role             = aws_iam_role.lambda_role.arn
   handler          = "lambda_function.lambda_handler"
   runtime          = "python3.8"
-  source_code_hash = data.archive_file.slack_command_lambda.output_base64sha256
+  source_code_hash = data.archive_file.lambda_package.output_base64sha256
 
   environment {
     variables = {
@@ -94,12 +88,12 @@ resource "aws_lambda_function" "slack_command" {
 }
 
 resource "aws_lambda_function" "initialize_environments" {
-  filename         = data.archive_file.initialize_environments_lambda.output_path
+  filename         = data.archive_file.lambda_package.output_path
   function_name    = "initialize-environments-lambda"
   role             = aws_iam_role.lambda_role.arn
   handler          = "initialize_environments_lambda.lambda_handler"
   runtime          = "python3.8"
-  source_code_hash = data.archive_file.initialize_environments_lambda.output_base64sha256
+  source_code_hash = data.archive_file.lambda_package.output_base64sha256
 
   environment {
     variables = {
