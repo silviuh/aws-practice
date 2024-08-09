@@ -6,6 +6,10 @@ paths:
   /slack-command:
     post:
       operationId: "processSlackCommand"
+      x-amazon-apigateway-integration:
+        uri: ${lambda_uri}
+        httpMethod: POST
+        type: aws_proxy
       requestBody:
         required: true
         content:

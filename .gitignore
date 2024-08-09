@@ -21,3 +21,14 @@ node_modules
 
 # Serverless directories
 .serverless
+
+/htmlcov
+coverage.xml
+.coverage
+dynamodb_backup.json
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+tfplan
