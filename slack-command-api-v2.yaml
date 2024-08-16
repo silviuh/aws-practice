@@ -1,0 +1,109 @@
+openapi: 3.0.3
+info:
+  title: Slack Command API
+  version: 1.0.0
+paths:
+  /slack-command:
+    post:
+      operationId: "processSlackCommand"
+      x-amazon-apigateway-integration:
+        uri: ${lambda_uri}
+        httpMethod: POST
+        type: aws_proxy
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                team_id:
+                  type: string
+                channel_id:
+                  type: string
+                user_id:
+                  type: string
+                user_name:
+                  type: string
+                command:
+                  type: string
+                text:
+                  type: string
+              required:
+                - token
+                - team_id
+                - channel_id
+                - user_id
+                - user_name
+                - command
+                - text
+      responses:
+        "200":
+          description: "200 response"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response_type:
+                    type: string
+                    enum: [in_channel, ephemeral]
+                  text:
+                    type: string
+        "400":
+          description: "400 response"
+          content: {}
+  /initialize:
+    post:
+      operationId: "initializeEnvironments"
+      x-amazon-apigateway-integration:
+        uri: ${lambda_uri}
+        httpMethod: POST
+        type: aws_proxy
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                team_id:
+                  type: string
+                channel_id:
+                  type: string
+                user_id:
+                  type: string
+                user_name:
+                  type: string
+                command:
+                  type: string
+                text:
+                  type: string
+              required:
+                - token
+                - team_id
+                - channel_id
+                - user_id
+                - user_name
+                - command
+                - text
+      responses:
+        "200":
+          description: "200 response"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response_type:
+                    type: string
+                    enum: [in_channel, ephemeral]
+                  text:
+                    type: string
+        "400":
+          description: "400 response"
+          content: {}
