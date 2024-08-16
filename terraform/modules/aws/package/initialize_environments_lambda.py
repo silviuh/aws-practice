@@ -14,9 +14,6 @@ except ImportError as e:
     print(f"Error importing initialize_environments: {e}")
 
 def lambda_handler(event, context):
-    print(event)
-    print(event['body'])
-
     try:
         initialize_environments(env_count=5)
         return {

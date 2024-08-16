@@ -1,11 +1,27 @@
+import os
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 import time
 
-boto3.setup_default_session(region_name='us-west-2')
-dynamodb = boto3.resource('dynamodb')
+# boto3.setup_default_session(region_name='us-west-2')
+
+def get_localstack_client(service_name):
+    if 'LOCALSTACK_HOSTNAME' in os.environ:
+        return boto3.resource(
+            service_name,
+            endpoint_url=f"http://{os.environ['LOCALSTACK_HOSTNAME']}:4566",
+            aws_access_key_id='test',
+            aws_secret_access_key='test',
+            region_name='us-west-2'
+        )
+    else:
+        return boto3.resource(service_name, region_name='us-west-2')
+
+
+dynamodb = get_localstack_client('dynamodb')
 table = dynamodb.Table('EnvironmentBookings')
+
 
 def get_environment(env_id):
     try:
@@ -14,6 +30,7 @@ def get_environment(env_id):
     except ClientError as e:
         print(f"Error getting environment {env_id}: {e.response['Error']['Message']}")
         return None
+
 
 def book_environment(env_id, user, reason):
     try:
@@ -41,6 +58,7 @@ def book_environment(env_id, user, reason):
         print(f"Error booking environment {env_id}: {e.response['Error']['Message']}")
         raise
 
+
 def return_environment(env_id, user):
     try:
         response = table.update_item(
@@ -66,6 +84,7 @@ def return_environment(env_id, user):
         print(f"Error returning environment {env_id}: {e.response['Error']['Message']}")
         raise
 
+
 def get_all_environments():
     try:
         response = table.scan()
@@ -73,6 +92,7 @@ def get_all_environments():
     except ClientError as e:
         print(f"Error getting all environments: {e.response['Error']['Message']}")
         return []
+
 
 def evict_environment(env_id):
     try:
@@ -98,6 +118,7 @@ def evict_environment(env_id):
             return False
         print(f"Error evicting environment {env_id}: {e.response['Error']['Message']}")
         raise
+
 
 def initialize_environments(env_count=5):
     for i in range(1, env_count + 1):

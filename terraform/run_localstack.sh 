@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Set environment variable for LocalStack
+export LOCALSTACK_HOSTNAME=localhost
+
 # Start LocalStack
 docker-compose up -d
 
@@ -9,8 +12,23 @@ while ! curl -s http://localhost:4566 > /dev/null; do
     sleep 1
 done
 
+# Initialize Terraform with LocalStack backend configuration
+terraform init -reconfigure -backend-config=backend_override.tf
+
 # Run Terraform with LocalStack configuration
-terraform init
 terraform apply -var="use_localstack=true" -auto-approve
 
-echo "LocalStack environment is ready!"
+# Test Lambda functions
+echo "Testing initialize-environments-lambda..."
+aws --endpoint-url=http://localhost:4566 lambda invoke --function-name initialize-environments-lambda output.txt
+cat output.txt
+
+echo "Testing slack-command-lambda..."
+aws --endpoint-url=http://localhost:4566 lambda invoke --function-name slack-command-lambda --payload '{"body":"command=/stat&user_name=testuser&channel_id=C12345"}' output.txt
+cat output.txt
+
+# Check DynamoDB table
+echo "Checking DynamoDB table..."
+aws --endpoint-url=http://localhost:4566 dynamodb scan --table-name EnvironmentBookings
+
+echo "LocalStack environment is ready and tested!"

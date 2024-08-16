@@ -15,9 +15,11 @@ resource "aws_s3_bucket_public_access_block" "lambda_bucket_access" {
 
 resource "null_resource" "create_lambda_package" {
   triggers = {
-    src_hash     = sha256(join("", [for f in fileset("${path.module}/../../../src", "**"): filesha256("${path.module}/../../../src/${f}")]))
+    src_hash = sha256(join("", [
+      for f in fileset("${path.module}/../../../src", "**") :filesha256("${path.module}/../../../src/${f}")
+    ]))
     requirements = filemd5("${path.module}/../../../requirements.txt")
-    always_run   = timestamp()
+    always_run = timestamp()
   }
 
   provisioner "local-exec" {
@@ -26,25 +28,23 @@ resource "null_resource" "create_lambda_package" {
       cp -R ${path.module}/../../../src/* ${path.module}/package/
       pip install -r ${path.module}/../../../requirements.txt -t ${path.module}/package/
       cd ${path.module}/package
-      echo "Package contents:"
-      ls -R
-      zip -r ${path.module}/lambda_package.zip .
+      zip -r ../lambda_package.zip .
       aws --endpoint-url=http://localhost:4566 s3 cp ${path.module}/lambda_package.zip s3://${aws_s3_bucket.lambda_bucket.id}/lambda_package_$(date +%s).zip
     EOT
   }
 }
 
 data "aws_s3_bucket_objects" "lambda_packages" {
-  provider   = aws.localstack
-  bucket     = aws_s3_bucket.lambda_bucket.id
-  prefix     = "lambda_package_"
+  provider = aws.localstack
+  bucket   = aws_s3_bucket.lambda_bucket.id
+  prefix   = "lambda_package_"
   depends_on = [null_resource.create_lambda_package]
 }
 
 data "aws_s3_object" "lambda_package" {
-  provider   = aws.localstack
-  bucket     = aws_s3_bucket.lambda_bucket.id
-  key        = element(sort(data.aws_s3_bucket_objects.lambda_packages.keys), length(data.aws_s3_bucket_objects.lambda_packages.keys) - 1)
+  provider = aws.localstack
+  bucket   = aws_s3_bucket.lambda_bucket.id
+  key = element(sort(data.aws_s3_bucket_objects.lambda_packages.keys), length(data.aws_s3_bucket_objects.lambda_packages.keys) - 1)
   depends_on = [null_resource.create_lambda_package]
 }
 
@@ -62,8 +62,9 @@ resource "aws_lambda_function" "slack_command" {
 
   environment {
     variables = {
-      DYNAMODB_TABLE  = aws_dynamodb_table.environments_table.name
-      SLACK_BOT_TOKEN = "ssm:/slack/bot-token"
+      DYNAMODB_TABLE      = aws_dynamodb_table.environments_table.name
+      SLACK_BOT_TOKEN     = "ssm:/slack/bot-token"
+      LOCALSTACK_HOSTNAME = "localhost"
     }
   }
 }
@@ -82,7 +83,8 @@ resource "aws_lambda_function" "initialize_environments" {
 
   environment {
     variables = {
-      DYNAMODB_TABLE = aws_dynamodb_table.environments_table.name
+      DYNAMODB_TABLE      = aws_dynamodb_table.environments_table.name
+      LOCALSTACK_HOSTNAME = "localhost"
     }
   }
 }
@@ -93,13 +95,15 @@ resource "aws_iam_role" "lambda_role" {
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "lambda.amazonaws.com"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
       }
-    }]
+    ]
   })
 }
 

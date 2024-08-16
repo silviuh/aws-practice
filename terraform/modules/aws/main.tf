@@ -22,12 +22,13 @@ resource "null_resource" "create_lambda_package" {
 
   provisioner "local-exec" {
     command = <<EOT
-      mkdir -p ${path.module}/package
-      cp -R ${path.module}/../../../src/* ${path.module}/package/
-      pip install -r ${path.module}/../../../requirements.txt -t ${path.module}/package/
-      zip -r ${path.module}/lambda_package.zip ${path.module}/package/
-      aws s3 cp ${path.module}/lambda_package.zip s3://${aws_s3_bucket.lambda_bucket.id}/lambda_package_$(date +%s).zip
-    EOT
+    mkdir -p ${path.module}/package
+    cp -R ${path.module}/../../../src/* ${path.module}/package/
+    pip install -r ${path.module}/../../../requirements.txt -t ${path.module}/package/
+    cd ${path.module}/package
+    zip -r ../lambda_package.zip .
+    aws s3 cp ../lambda_package.zip s3://${aws_s3_bucket.lambda_bucket.id}/lambda_package_$(date +%s).zip
+  EOT
   }
 }
 
