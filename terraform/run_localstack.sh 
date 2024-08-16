@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Start LocalStack
+docker-compose up -d
+
+# Wait for LocalStack to be ready
+echo "Waiting for LocalStack to be ready..."
+while ! curl -s http://localhost:4566 > /dev/null; do
+    sleep 1
+done
+
+# Run Terraform with LocalStack configuration
+terraform init
+terraform apply -var="use_localstack=true" -auto-approve
+
+echo "LocalStack environment is ready!"
